@@ -59,7 +59,7 @@ def sha256_cached(path: Path) -> str:
 def select_event_rows(
     rows: list[dict[str, str]], event_id: str, network: str, family: str, stations: list[str] | None = None
 ) -> list[dict[str, str]]:
-    """Metadata rows of one event for a network and channel family (and optionally some station codes), sorted by name."""
+    """Metadata rows of one event for a network and channel family (optionally some stations), sorted by name."""
     out = []
     for r in rows:
         parts = r["trace_name"].split(".")
@@ -146,9 +146,15 @@ def load_instance_event(cfg: Any, n_samples: int = N_SAMPLES) -> ScenarioData:
             "station_id": rec.station, "p_time_s": (idx0 + rec.p_sample) / RATE_HZ, "n_samples_total": n,
             "duration_s": n / RATE_HZ, "p_uncertainty_s": rec.p_uncertainty_s, "start_time_s": idx0 / RATE_HZ,
         })  # fmt: skip
-        info[rec.station] = {**meta, "trace_name": rec.trace_name, "network": rec.network,
-                             "p_sample": rec.p_sample, "p_uncertainty_s": rec.p_uncertainty_s,
-                             "magnitude": rec.magnitude, "epicentral_distance_km": rec.epicentral_distance_km}  # fmt: skip
+        info[rec.station] = {
+            **meta,
+            "trace_name": rec.trace_name,
+            "network": rec.network,
+            "p_sample": rec.p_sample,
+            "p_uncertainty_s": rec.p_uncertainty_s,
+            "magnitude": rec.magnitude,
+            "epicentral_distance_km": rec.epicentral_distance_km,
+        }
     packets = [p for st in stations for p in packets_by_station[st["station_id"]]]
     hashes[str(hdf5)] = sha256_cached(hdf5) if cfg.input == "release_hdf5" else ""
     hashes[str(csv_path)] = sha256_cached(csv_path)
