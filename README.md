@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](pyproject.toml)
 
-**Test earthquake early warning detectors the way a live system sees data: one packet at a time, late, lossy and out of order.**
+**Test earthquake early warning detectors the way a live system sees data.**
 
 QuakeNode is an open-source Python testbed for evaluating earthquake early warning (EEW) detectors as **causal streaming systems**. Describe a multi-station experiment in YAML, and QuakeNode replays station data on a logical clock, injects seeded network faults, runs streaming detectors and a fusion rule, and writes metrics, plots, an event log and a reproducibility manifest.
 
