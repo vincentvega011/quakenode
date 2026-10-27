@@ -11,7 +11,7 @@ Only the latest released version (currently 0.2.x) receives fixes.
 ## Reporting a vulnerability
 
 Please report privately, not in a public issue: use the repository's security advisory form
-(`https://github.com/vincentvega011/quakenode-backup/security/advisories/new`) or the
+(`https://github.com/vincentvega011/quakenode/security/advisories/new`) or the
 maintainers' address yajan.adh@gmail.com. Include the version, a minimal reproduction (a config or input
 file) and the impact you see. Reports of unsafe file handling (for example configs that write outside the chosen output
 directory), unsafe deserialisation, or dependency vulnerabilities are welcome.

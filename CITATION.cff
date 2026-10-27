@@ -7,7 +7,7 @@ version: "0.2.0"
 license: MIT
 authors:
   - name: "QuakeNode contributors"
-repository-code: "https://github.com/vincentvega011/quakenode-backup"
+repository-code: "https://github.com/vincentvega011/quakenode"
 keywords:
   - earthquake early warning
   - causal streaming evaluation
