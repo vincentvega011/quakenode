@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest a detector, fault type, metric, plot, command or documentation change
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What would you like to do that you cannot do now?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Files or modules you expect to touch, and how you would test it. Changes to timing, preprocessing or replay need a test that alters only future samples and asserts identical earlier outputs.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This does not make QuakeNode an operational warning system, and it makes no novelty or performance claim.
+          required: true

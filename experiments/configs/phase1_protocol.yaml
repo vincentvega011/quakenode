@@ -1,0 +1,187 @@
+# Protocol description only; no experiment implementation consumes this file.
+protocol:
+  id: quakenode-phase1-hnz-packet-loss
+  version: "0.1"
+  prepared_date: "2026-10-26"
+  status: preregistration_draft
+  question: "Does 5% independent one-second packet loss change equal-event-weighted restricted detection time for a fixed causal HNZ STA/LTA detector?"
+  hypothesis: "5% packet loss increases mean event-level restricted detection time versus packetized no-fault control."
+  minimum_relevant_effect_s: 0.5 # exploratory engineering margin, half a packet interval
+  warning_utility: out_of_scope
+  fusion: none_single_station
+
+dataset:
+  name: INSTANCE
+  release: "sample dataset v3; matching event metadata v3"
+  landing_page: "https://www.pi.ingv.it/banche-dati/instance/"
+  doi: "10.13127/instance"
+  license: "CC-BY-4.0"
+  access_verified: false
+  downloaded: false
+  waveform_path: null # PLACEHOLDER
+  metadata_path: null # PLACEHOLDER
+  sha256: null # PLACEHOLDER; populate before any run
+  selection:
+    channel: HNZ
+    component: vertical
+    expected_sample_rate_hz: 100
+    representation: digital_counts
+    expected_trace_duration_s: 120
+    event_ids: null # PLACEHOLDER; freeze from metadata before detector outputs
+    exclusion_manifest: null # PLACEHOLDER
+    include_requires:
+      - unambiguous_event_id_station_trace
+      - trace_specific_catalog_P_pick
+      - valid_trace_start_and_sample_time_map
+      - at_least_10_s_contiguous_pre_P
+      - valid_data_through_P_plus_10_s
+      - no_source_quality_flag_for_gap_clip_spike_or_processing_fault
+    unresolved:
+      - exact_metadata_field_names
+      - actual_HNZ_event_and_noise_coverage
+      - event_station_join_cardinality
+      - duplicate_trace_id_field
+      - quality_flag_names_and_semantics
+      - consistent_counts_representation_in_sample
+
+split:
+  required: false
+  reason: "No training or threshold search; fixed detector parameters."
+  tune_on_evaluation: false
+
+time_model:
+  recorded_sample_time: "UTC trace start + sample index / 100 Hz; verify before run"
+  packet_duration_s: 1.0
+  packet_samples: 100
+  packet_anchor: trace_start
+  packet_ready_time: final_sample_time_in_packet
+  simulated_arrival_time: "packet-ready time + injected delay; absent for dropped packet"
+  detection_emission_time: "replay time packet is processed and threshold crossing emitted"
+  event_association_time: not_applicable
+  alert_issuance_time: not_applicable
+  alert_delivery_time: not_applicable
+  packet_samples_available_only_at_arrival: true
+  gap_policy: "missing interval; reset detector; fresh contiguous 10 s LTA warm-up"
+  zero_fill_or_interpolation: prohibited
+
+detector:
+  name: causal_classic_sta_lta
+  channel: HNZ_vertical
+  input_representation: digital_counts
+  sample_rate_hz: 100
+  additional_preprocessing: none
+  sta_window_s: 0.5
+  sta_samples: 50
+  lta_window_s: 10.0
+  lta_samples: 1000
+  lta_precedes_sta: true
+  trigger_ratio_on: 3.5
+  trigger_ratio_off: 1.5
+  ratio: "trailing_mean_square_STA / max(preceding_nonoverlap_mean_square_LTA, epsilon)"
+  epsilon: null # PLACEHOLDER; freeze before implementation
+  warmup_s: 10
+  frozen: true
+
+evaluation:
+  reference: station_trace_catalog_P_pick
+  horizon_s: 10
+  match_window: "[P, P+10 s] on emission clock mapped to recorded UTC"
+  unmatched_event_rdt_s: 10
+  pre_P_trigger: report_separately
+  primary_metric:
+    name: equal_event_weighted_paired_restricted_detection_time_difference
+    units: seconds
+    formula: "RDT=min(t_emit-t_P,10) for matched trigger, else 10; average fault-control within trace over masks, traces within event, then events equally."
+  secondary_metrics:
+    - miss_fraction_by_10s
+    - conditional_latency_seconds
+    - noise_false_triggers_per_valid_trace_hour
+    - raw_noise_trigger_count
+    - valid_noise_trace_seconds
+    - pre_P_trigger_fraction
+    - dose_response_RDT_and_miss_fraction
+    - fixed_delay_timing_shift_seconds
+  target_site_warning_time: not_evaluated
+  accuracy: not_reported
+
+scenarios:
+  - id: C0
+    role: primary_control
+    packet_loss_probability: 0.0
+    extra_delay_s: 0.0
+    outage: null
+  - id: F1
+    role: primary_fault
+    packet_loss_model: independent_bernoulli_per_packet
+    packet_loss_probability: 0.05
+    extra_delay_s: 0.0
+    empirical_basis: none_exploratory
+  - id: F1a
+    role: exploratory_loss_sensitivity
+    packet_loss_model: independent_bernoulli_per_packet
+    packet_loss_probability: 0.01
+    extra_delay_s: 0.0
+    empirical_basis: none_exploratory
+  - id: F1b
+    role: exploratory_loss_sensitivity
+    packet_loss_model: independent_bernoulli_per_packet
+    packet_loss_probability: 0.10
+    extra_delay_s: 0.0
+    empirical_basis: none_exploratory
+  - id: F2
+    role: exploratory_onset_outage
+    packet_loss_probability: 0.0
+    outage:
+      target_start_relative_to_P_s: -1.0
+      duration_packets: 3
+      start_rule: "nearest trace-start-anchored packet boundary to P-1 s; ties earlier"
+      rule: "drop that packet and the next two full packets; record realized offset from P"
+    empirical_basis: none_exploratory
+  - id: F3
+    role: timing_sanity
+    packet_loss_probability: 0.0
+    extra_delay_s: 0.25
+    empirical_basis: none_exploratory
+
+repetitions:
+  control_runs_per_trace: 1
+  random_loss_replicates_per_trace_scenario: 20
+  master_seed: 20261026
+  seed_derivation: "stable_hash(master_seed, dataset_version, event_id, station_location_channel, scenario_id, replicate)"
+  bootstrap_resamples: 10000
+  bootstrap_seed: null # PLACEHOLDER; freeze before analysis
+  power_claim: none
+
+statistics:
+  primary_ci: "two-sided 95% event-cluster bootstrap; resample event IDs"
+  equivalence_ci: "90% interval wholly within [-0.5,+0.5] seconds indicates practical equivalence for this setup"
+  supports_hypothesis_if:
+    - "95% CI lower bound > 0 seconds"
+    - "point estimate >= +0.5 seconds"
+  report:
+    - eligible_event_count
+    - eligible_event_station_trace_count
+    - exclusions_by_reason
+    - event_level_effect_distribution
+    - per_scenario_misses_latency_and_denominators
+    - within_trace_mask_variation_separately_from_event_uncertainty
+
+stop_gates:
+  - "Cannot verify official sample access, version, license, or checksum."
+  - "No consistent HNZ event/noise traces, P-pick/start-time map, or 100 Hz timing."
+  - "Insufficient contiguous warm-up or post-P horizon."
+  - "Cannot establish stable event/station/trace joins."
+  - "Cannot distinguish source gaps from injected faults."
+  - "Causal replay would expose future samples or silently fill gaps."
+  - "A change to dataset, channel, detector, selection, or primary metric is needed after outcome inspection; amend first."
+  - "No target-site warning-time claim without validated target threshold time and shared clock."
+
+reproducibility:
+  preserve_protocol_amendments: true
+  preserve_config_checksum: true
+  preserve_dataset_checksums_and_license: true
+  preserve_selection_and_exclusion_manifest: true
+  preserve_seeds_and_fault_masks_or_checksums: true
+  preserve_event_level_results: true
+  preserve_runtime_os_and_dependencies: true
+  waveform_redistribution: "only after applicable terms are verified"

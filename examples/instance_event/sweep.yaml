@@ -1,0 +1,33 @@
+# Packet-loss sweep over the three gap policies on a REAL RECORDED event (tool demonstration). Change the input with
+#   --set scenario.instance.input=mseed       and the event with   --set scenario.instance.event_id=11152091
+schema_version: 1
+name: instance_event_gap_policy_sweep
+seeds: [1, 2, 3, 4, 5]
+output_dir: runs
+
+scenario:
+  source: instance_event
+  instance:
+    event_id: "11061071"
+    input: release_hdf5
+    data_dir: data/instance_sample
+    raw_dir: data/raw/dev
+    packet_len_samples: 100
+    min_stations: 3
+
+detector:
+  name: recursive_sta_lta
+  params: {sta_s: 0.5, lta_s: 4.0, threshold_on: 3.0, threshold_off: 1.5}
+
+pipeline: {order_policy: drop_late, gap_policy: reset}
+
+faults:
+  - {type: packet_loss, model: bernoulli, p: 0.0, targets: all}   # swept below
+
+fusion: {k: 3, window_s: 10, update_window_s: 5, window_clock: emission}
+
+sweep:
+  headline_metric: detection_fraction
+  parameters:
+    - {path: faults.0.p, values: [0.0, 0.02, 0.05, 0.1]}
+    - {path: pipeline.gap_policy, values: [reset, hold, zero_fill]}

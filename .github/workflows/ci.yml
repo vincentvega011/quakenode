@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    # The Windows entry is experimental: the maintainers could not run it locally, so a failure there does not fail CI
+    # until someone has confirmed the results. Do not read a green Windows job as verified support before then.
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+        include:
+          - os: macos-latest
+            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.12"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e ".[dev,data,plots]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest
+      - name: CLI quickstart smoke test
+        run: |
+          quakenode version
+          for f in examples/*/*.yaml; do quakenode validate "$f"; done
+          quakenode demo --dir "$RUNNER_TEMP/demo"
+          quakenode run examples/synthetic_network/config.yaml --out-dir "$RUNNER_TEMP/runs"
+          quakenode sweep examples/synthetic_network/sweep.yaml --out-dir "$RUNNER_TEMP/runs"
+          quakenode sweep examples/synthetic_network/sweep_detector.yaml --out-dir "$RUNNER_TEMP/runs"
+          quakenode compare examples/synthetic_network/config.yaml --a pipeline.gap_policy=reset --b pipeline.gap_policy=hold --out-dir "$RUNNER_TEMP/runs"
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: twine check dist/*
+      - name: Install the wheel and run the packaged demo
+        run: |
+          python -m venv "$RUNNER_TEMP/wheelenv"
+          "$RUNNER_TEMP/wheelenv/bin/pip" install dist/*.whl
+          cd "$RUNNER_TEMP" && "$RUNNER_TEMP/wheelenv/bin/quakenode" demo --dir "$RUNNER_TEMP/wheeldemo"

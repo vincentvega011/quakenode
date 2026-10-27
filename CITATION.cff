@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use QuakeNode, please cite it using the metadata below. QuakeNode is a research testbed, not an operational warning system."
+title: "QuakeNode"
+abstract: "Research testbed for evaluating earthquake early warning detectors as causal streaming systems, with deterministic fault injection and reproducible experiments."
+type: software
+version: "0.2.0"
+license: MIT
+authors:
+  - name: "QuakeNode contributors"
+repository-code: "https://github.com/vincentvega011/quakenode-backup"
+keywords:
+  - earthquake early warning
+  - causal streaming evaluation
+  - fault injection
+  - reproducibility

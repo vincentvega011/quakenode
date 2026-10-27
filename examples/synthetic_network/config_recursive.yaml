@@ -1,0 +1,50 @@
+# SYNTHETIC 5-station demo. Everything here is generated in-process; it is not a seismological model.
+schema_version: 1
+name: synthetic_network_demo_recursive
+seeds: [1, 2, 3, 4, 5, 6, 7, 8]
+output_dir: runs
+
+scenario:
+  type: synthetic_network
+  duration_s: 45
+  sample_rate_hz: 40
+  packet_len_samples: 20          # 0.5 s packets
+  velocity_km_s: 6.0
+  noise_sigma: 1.0
+  baseline_counts: 800
+  stations:
+    - {id: S1, x_km: 0,   y_km: 0}
+    - {id: S2, x_km: 60,  y_km: 10}
+    - {id: S3, x_km: 30,  y_km: 70}
+    - {id: S4, x_km: -40, y_km: 50}
+    - {id: S5, x_km: 90,  y_km: 80}
+  event:
+    origin_time_s: 15.0
+    x_km: 25
+    y_km: 30
+    depth_km: 10
+    amplitude: 60
+
+detector:
+  name: recursive_sta_lta         # recursive STA/LTA with on/off thresholds (public definition)
+  params: {sta_s: 0.5, lta_s: 4.0, threshold_on: 3.0, threshold_off: 1.5}
+
+pipeline:
+  order_policy: buffer            # reject | buffer | drop_late
+  max_wait_s: 2.0
+  processing_delay_s: 0.0
+
+faults:                           # applied in this order
+  - {type: fixed_delay, delay_s: 0.3, targets: all}
+  - {type: jitter, distribution: exponential, mean_s: 0.1, targets: all}
+  - {type: packet_loss, model: bernoulli, p: 0.1, targets: all}
+
+fusion:
+  k: 3
+  window_s: 10
+  update_window_s: 5
+  window_clock: emission
+
+metrics:
+  detection_pre_margin_s: 1.0
+  detection_post_horizon_s: 10.0

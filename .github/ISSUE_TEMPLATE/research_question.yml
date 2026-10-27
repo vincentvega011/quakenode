@@ -1,0 +1,19 @@
+name: Research question
+description: A question about methodology, metrics or how to design an experiment with QuakeNode
+labels: ["question", "research"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: The question
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: What have you tried?
+      description: Config, sweep or compare command, and what the report showed. State whether the data are SYNTHETIC or a recorded event.
+  - type: markdown
+    attributes:
+      value: |
+        Synthetic results support software-invariant claims only. Questions that need real-data conclusions (recall, false-alert rate, warning time) cannot be answered by this tool as it stands.

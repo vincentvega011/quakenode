@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environments
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Data and run outputs (never commit waveform data)
+data/
+outputs/
+
+# User-only planning notes
+runs/
+
+# Instructions copy for another tool (kept local)
+.ruff_cache/

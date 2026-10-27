@@ -1,0 +1,32 @@
+# REAL RECORDED EVENT demo, input = INSTANCE release HDF5 (NOT causal input: the release was processed over the whole
+# 120 s window). Tool demonstration only, not performance evidence. Needs your own copy of the INSTANCE v3 sample.
+schema_version: 1
+name: instance_event_hdf5_demo
+seeds: [1, 2, 3, 4, 5]          # real data are fixed; seeds only change the fault randomness
+output_dir: runs
+
+scenario:
+  source: instance_event
+  instance:
+    event_id: "11061071"         # quote it: YAML would read an unquoted id as a number
+    input: release_hdf5
+    data_dir: data/instance_sample
+    network: IV
+    channel_family: HH
+    packet_len_samples: 100      # 1 s packets at 100 Hz
+    min_stations: 3
+
+detector:
+  name: recursive_sta_lta
+  params: {sta_s: 0.5, lta_s: 4.0, threshold_on: 3.0, threshold_off: 1.5}
+
+pipeline: {order_policy: drop_late, gap_policy: reset}
+
+faults:
+  - {type: packet_loss, model: bernoulli, p: 0.02, targets: all}
+
+fusion: {k: 3, window_s: 10, update_window_s: 5, window_clock: emission}
+
+metrics:
+  detection_pre_margin_s: 1.0     # a trigger up to 1 s before the catalog P still counts as a hit
+  detection_post_horizon_s: 10.0

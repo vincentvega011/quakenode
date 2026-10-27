@@ -1,0 +1,36 @@
+# SYNTHETIC packet-loss sweep over the three gap policies (same scenario, same 8 seeds). Every point is paired,
+# seed by seed, with a matched no-fault control that uses the same gap policy.
+schema_version: 1
+name: synthetic_gap_policy_sweep
+seeds: [1, 2, 3, 4, 5, 6, 7, 8]
+output_dir: runs
+
+scenario:
+  type: synthetic_network
+  duration_s: 45
+  sample_rate_hz: 40
+  packet_len_samples: 20
+  stations:
+    - {id: S1, x_km: 0,   y_km: 0}
+    - {id: S2, x_km: 60,  y_km: 10}
+    - {id: S3, x_km: 30,  y_km: 70}
+    - {id: S4, x_km: -40, y_km: 50}
+    - {id: S5, x_km: 90,  y_km: 80}
+  event: {origin_time_s: 15.0, x_km: 25, y_km: 30, depth_km: 10, amplitude: 60}
+
+detector:
+  name: sta_lta_rms
+  params: {sta_s: 0.5, lta_s: 4.0, threshold: 3.0}
+
+pipeline: {order_policy: drop_late, max_wait_s: 0.0, gap_policy: reset}   # gap_policy is swept below
+
+faults:
+  - {type: packet_loss, model: bernoulli, p: 0.0, targets: all}          # p is swept below
+
+fusion: {k: 3, window_s: 10, update_window_s: 5, window_clock: emission}
+
+sweep:
+  headline_metric: detection_fraction
+  parameters:
+    - {path: faults.0.p, values: [0.0, 0.01, 0.02, 0.05, 0.1, 0.2]}
+    - {path: pipeline.gap_policy, values: [reset, hold, zero_fill]}

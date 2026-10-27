@@ -1,0 +1,35 @@
+# SYNTHETIC detector comparison at a fixed packet-loss probability (2%). Each detector is paired, seed by seed,
+# with its own matched no-fault control (same detector, faults removed).
+schema_version: 1
+name: synthetic_detector_comparison
+seeds: [1, 2, 3, 4, 5, 6, 7, 8]
+output_dir: runs
+
+scenario:
+  type: synthetic_network
+  duration_s: 45
+  sample_rate_hz: 40
+  packet_len_samples: 20
+  stations:
+    - {id: S1, x_km: 0,   y_km: 0}
+    - {id: S2, x_km: 60,  y_km: 10}
+    - {id: S3, x_km: 30,  y_km: 70}
+    - {id: S4, x_km: -40, y_km: 50}
+    - {id: S5, x_km: 90,  y_km: 80}
+  event: {origin_time_s: 15.0, x_km: 25, y_km: 30, depth_km: 10, amplitude: 60}
+
+detector:
+  name: sta_lta_rms                # swept below; sta_s and lta_s exist for both detectors, thresholds default to 3
+  params: {sta_s: 0.5, lta_s: 4.0}
+
+pipeline: {order_policy: drop_late, gap_policy: reset}
+
+faults:
+  - {type: packet_loss, model: bernoulli, p: 0.02, targets: all}
+
+fusion: {k: 3, window_s: 10, update_window_s: 5, window_clock: emission}
+
+sweep:
+  headline_metric: detection_fraction
+  parameters:
+    - {path: detector.name, values: [sta_lta_rms, recursive_sta_lta]}

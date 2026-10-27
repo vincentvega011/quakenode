@@ -1,0 +1,33 @@
+# REAL RECORDED EVENT demo, input = raw INGV miniSEED cached under data/raw/dev (fetched by
+# scripts/fetch_dev_events.py). Tool demonstration only, not performance evidence.
+schema_version: 1
+name: instance_event_mseed_demo
+seeds: [1, 2, 3, 4, 5]
+output_dir: runs
+
+scenario:
+  source: instance_event
+  instance:
+    event_id: "11061071"
+    input: mseed
+    data_dir: data/instance_sample   # metadata CSV (P picks, coordinates) still comes from the INSTANCE sample
+    raw_dir: data/raw/dev
+    network: IV
+    channel_family: HH
+    packet_len_samples: 100
+    min_stations: 3
+
+detector:
+  name: recursive_sta_lta
+  params: {sta_s: 0.5, lta_s: 4.0, threshold_on: 3.0, threshold_off: 1.5}
+
+pipeline: {order_policy: drop_late, gap_policy: reset}
+
+faults:
+  - {type: packet_loss, model: bernoulli, p: 0.02, targets: all}
+
+fusion: {k: 3, window_s: 10, update_window_s: 5, window_clock: emission}
+
+metrics:
+  detection_pre_margin_s: 1.0
+  detection_post_horizon_s: 10.0

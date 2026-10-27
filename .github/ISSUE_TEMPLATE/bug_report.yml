@@ -1,0 +1,37 @@
+name: Bug report
+description: Something in QuakeNode does not work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        QuakeNode is a research testbed, not an operational warning system. Please do not attach waveform data you do not have the right to share.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal steps to reproduce
+      description: The exact command and config (or `--set` overrides). A SYNTHETIC config is best.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Output of `quakenode version` and `python --version`
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system
+  - type: textarea
+    id: manifest
+    attributes:
+      label: Relevant part of `manifest.json` (python and dependency versions, git commit)
+      render: json
