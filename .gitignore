@@ -18,7 +18,8 @@ venv/
 .DS_Store
 
 # Data and run outputs (never commit waveform data)
-data/
+# Anchored: only the top-level data directory, NOT src/quakenode/data/ (package code)
+/data/
 outputs/
 
 # User-only planning notes
